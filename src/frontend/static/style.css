@@ -61,6 +61,24 @@
 .hidden {
   display: none !important;
 }
+
+/* Prevent text selection when actively dragging controls */
+.no-select {
+  user-select: none;
+  -webkit-user-select: none;
+  -ms-user-select: none;
+  -moz-user-select: none;
+}
+
+/* Allow text selection in inputs and textareas despite global no-select */
+.modal-filter,
+input,
+textarea {
+  user-select: text;
+  -webkit-user-select: text;
+  -ms-user-select: text;
+  -moz-user-select: text;
+}
 .keyboard-area {
   align-items: center;
   background: rgb(217,217,217);
@@ -252,6 +270,8 @@
   transform: scaleY(-1);
   width: 100%;
   z-index: 2;
+  /* Prevent Firefox from handling native range dragging, which caused jumps */
+  pointer-events: none;
 }
 .slider-vertical::-moz-range-progress {
   background: var(--go-green);
@@ -269,6 +289,8 @@
   overflow: hidden;
   position: relative;
   width: 100%;
+  /* Ensure pointer gestures are captured by our JS without browser scroll/zoom */
+  touch-action: none;
 }
 .speed-bar-wrapper {
   height: var(--slider-h);

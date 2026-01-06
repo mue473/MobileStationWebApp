@@ -687,36 +687,55 @@ function fetchAndApplyLocoState(locoUid) {
 // speed setting for the locomotive.
 speedBar.addEventListener('pointerdown', (e) => {
   isDragging = false;
-  const startY = e.clientY;
-  const startVal = Math.min(1000, Math.max(0, Number(speedSlider.value) || 0));
-  dragTimeout = setTimeout(() => {
-    isDragging = true;
-  }, 100);
+  let startY = e.clientY;
+  let startVal = Math.min(1000, Math.max(0, Number(speedSlider.value) || 0));
+  const dragThreshold = 4; // px threshold to decide drag vs tap
+
+  // Prevent text selection while interacting with the speed bar
+  document.body.classList.add('no-select');
 
   speedBar.setPointerCapture(e.pointerId);
 
+  // Cache geometry once per interaction to avoid repeated DOM reads
+  const rect = speedBar.getBoundingClientRect();
+  const barHeight = rect.height;
+  const scale = 1000 / barHeight; // px -> value mapping
+  let lastValue = startVal;
+
   const onMove = (e) => {
-    if (!isDragging) return;
-    const rect = speedBar.getBoundingClientRect();
-    // Delta‑drag: adjust previous value by vertical movement proportionally to bar height
+    e.preventDefault();
     const dy = startY - e.clientY; // moving up increases speed
-    const delta = (dy / rect.height) * 1000;
-    const value = Math.round(Math.min(1000, Math.max(0, startVal + delta)));
-    speedSlider.value = value;
-    setLocoSpeed(value);
+    if (!isDragging && Math.abs(dy) >= dragThreshold) {
+      isDragging = true;
+    }
+    if (!isDragging) return;
+    // Delta‑drag: adjust previous value by vertical movement proportionally to bar height
+    const value = Math.round(Math.min(1000, Math.max(0, startVal + dy * scale)));
+    if (value !== lastValue) {
+      speedSlider.value = value;
+      setLocoSpeed(value);
+      lastValue = value;
+    }
+    if (value === 0 || value === 1000) {
+      // Freeze at edge without accumulating overshoot; immediately respond on reverse
+      startY = e.clientY;
+      startVal = value;
+    }
   };
 
   const onUp = (e) => {
-    clearTimeout(dragTimeout);
     speedBar.releasePointerCapture(e.pointerId);
     speedBar.removeEventListener('pointermove', onMove);
     speedBar.removeEventListener('pointerup', onUp);
     speedBar.removeEventListener('pointercancel', onUp);
 
-    // Short tap: set absolute value at tapped position
+    // Re-enable text selection after interaction ends
+    document.body.classList.remove('no-select');
+
+    // Tap: set absolute value at the final pointer position
     if (!isDragging) {
       const rect = speedBar.getBoundingClientRect();
-      const y = startY - rect.top;
+      const y = e.clientY - rect.top;
       const percent = 1 - (y / rect.height);
       const value = Math.min(1000, Math.max(0, Math.round(percent * 1000)));
       speedSlider.value = value;
