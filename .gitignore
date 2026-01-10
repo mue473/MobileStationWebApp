@@ -76,3 +76,9 @@ ehthumbs.db
 .vscode/**/*.db
 .vscode/**/.cache/
 .browse.VC.db
+
+# PNG assets under var directories
+var/fcticons/*.png
+var/icons/*.png
+var/magicons_/*.png
+var/sysicons/*.png
