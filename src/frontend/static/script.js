@@ -712,7 +712,6 @@ speedBar.addEventListener('pointerdown', (e) => {
     // Delta‑drag: adjust previous value by vertical movement proportionally to bar height
     const value = Math.round(Math.min(1000, Math.max(0, startVal + dy * scale)));
     if (value !== lastValue) {
-      speedSlider.value = value;
       setLocoSpeed(value);
       lastValue = value;
     }
@@ -738,7 +737,6 @@ speedBar.addEventListener('pointerdown', (e) => {
       const y = e.clientY - rect.top;
       const percent = 1 - (y / rect.height);
       const value = Math.min(1000, Math.max(0, Math.round(percent * 1000)));
-      speedSlider.value = value;
       setLocoSpeed(value);
     }
   };
@@ -758,7 +756,6 @@ speedBar.addEventListener('pointerdown', (e) => {
  * @param {number} val – the raw speed (0–1000)
  */
 function setLocoSpeed(val) {
-  updateSpeedUI(val);
   fetch('/api/control_event', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
